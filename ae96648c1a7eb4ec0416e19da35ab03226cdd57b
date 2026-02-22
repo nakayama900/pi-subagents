@@ -1,0 +1,26 @@
+pi-spawn.ts
+  20c67bf87739b491 99-102
+subagent-runner.ts
+  20c67bf87739b491 8,138-171,432-444
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "ae96648c1a7eb4ec0416e19da35ab03226cdd57b",
+  "prompts": {
+    "20c67bf87739b491": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a7e6c07f-bfde-4076-a244-e70b317e1cc7",
+        "model": "<synthetic>"
+      },
+      "human_author": "nakayama900 <49431394+nakayama900@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 52,
+      "total_deletions": 3,
+      "accepted_lines": 52,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/d99a57a4190ffbbbdb12d3e11ed0557b19b11a859b91d333867340e7904fd480"
+    }
+  }
+}
