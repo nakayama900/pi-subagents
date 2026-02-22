@@ -1,0 +1,24 @@
+pi-spawn.test.ts
+  20c67bf87739b491 3,98-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.4",
+  "base_commit_sha": "130bd72eb5f4caf58c742a47f07232f0304df71b",
+  "prompts": {
+    "20c67bf87739b491": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a7e6c07f-bfde-4076-a244-e70b317e1cc7",
+        "model": "<synthetic>"
+      },
+      "human_author": "nakayama900 <49431394+nakayama900@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 18,
+      "total_deletions": 2,
+      "accepted_lines": 17,
+      "overriden_lines": 0,
+      "messages_url": "https://usegitai.com/cas/efa8a3f751ddd7e5d172d2e85bc9825318df47789287c1ed871a9a601d6632af"
+    }
+  }
+}
