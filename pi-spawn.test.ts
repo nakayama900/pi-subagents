@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { getPiSpawnCommand, resolveWindowsPiCliScript, type PiSpawnDeps } from "./pi-spawn.ts";
+import { getPiSpawnCommand, getGeminiSpawnCommand, resolveWindowsPiCliScript, type PiSpawnDeps } from "./pi-spawn.ts";
 
 function makeDeps(input: {
 	platform?: NodeJS.Platform;
@@ -93,5 +93,21 @@ describe("resolveWindowsPiCliScript", () => {
 			existing: [packageJsonPath, cliPath],
 		});
 		assert.equal(resolveWindowsPiCliScript(deps), cliPath);
+	});
+});
+
+describe("getGeminiSpawnCommand", () => {
+	it("uses gemini command with -p flag", () => {
+		const args = ["Review this code"];
+		const result = getGeminiSpawnCommand(args);
+		assert.equal(result.command, "gemini");
+		assert.deepEqual(result.args, ["-p", "Review this code"]);
+	});
+
+	it("preserves all args after -p flag", () => {
+		const args = ["Task: hello", "world"];
+		const result = getGeminiSpawnCommand(args);
+		assert.equal(result.command, "gemini");
+		assert.deepEqual(result.args, ["-p", "Task: hello", "world"]);
 	});
 });
