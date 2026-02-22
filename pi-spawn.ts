@@ -96,3 +96,7 @@ export function getPiSpawnCommand(args: string[], deps: PiSpawnDeps = {}): PiSpa
 
 	return { command: "pi", args };
 }
+
+export function getGeminiSpawnCommand(args: string[]): PiSpawnCommand {
+	return { command: "gemini", args: ["-p", ...args] };
+}

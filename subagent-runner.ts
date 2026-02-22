@@ -5,7 +5,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 import { appendJsonl, getArtifactPaths } from "./artifacts.js";
-import { getPiSpawnCommand } from "./pi-spawn.js";
+import { getPiSpawnCommand, getGeminiSpawnCommand, type PiSpawnCommand } from "./pi-spawn.js";
 import { persistSingleOutput } from "./single-output.js";
 import {
 	type ArtifactConfig,
@@ -110,6 +110,40 @@ function runPiStreaming(
 		const outputStream = fs.createWriteStream(outputFile, { flags: "w" });
 		const spawnEnv = { ...process.env, ...(env ?? {}), ...getSubagentDepthEnv() };
 		const spawnSpec = getPiSpawnCommand(args);
+		const child = spawn(spawnSpec.command, spawnSpec.args, { cwd, stdio: ["ignore", "pipe", "pipe"], env: spawnEnv });
+		let stdout = "";
+
+		child.stdout.on("data", (chunk: Buffer) => {
+			const text = chunk.toString();
+			stdout += text;
+			outputStream.write(text);
+		});
+
+		child.stderr.on("data", (chunk: Buffer) => {
+			outputStream.write(chunk.toString());
+		});
+
+		child.on("close", (exitCode) => {
+			outputStream.end();
+			resolve({ stdout, exitCode });
+		});
+
+		child.on("error", () => {
+			outputStream.end();
+			resolve({ stdout, exitCode: 1 });
+		});
+	});
+}
+
+function runPiStreamingWithSpawn(
+	spawnSpec: PiSpawnCommand,
+	cwd: string,
+	outputFile: string,
+	env?: Record<string, string | undefined>,
+): Promise<{ stdout: string; exitCode: number | null }> {
+	return new Promise((resolve) => {
+		const outputStream = fs.createWriteStream(outputFile, { flags: "w" });
+		const spawnEnv = { ...process.env, ...(env ?? {}), ...getSubagentDepthEnv() };
 		const child = spawn(spawnSpec.command, spawnSpec.args, { cwd, stdio: ["ignore", "pipe", "pipe"], env: spawnEnv });
 		let stdout = "";
 
@@ -376,7 +410,6 @@ async function runSubagent(config: SubagentRunConfig): Promise<void> {
 
 		const placeholderRegex = new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
 		const task = step.task.replace(placeholderRegex, () => previousOutput);
-		args.push(`Task: ${task}`);
 
 		let artifactPaths: ArtifactPaths | undefined;
 		if (artifactsDir && artifactConfig?.enabled !== false) {
@@ -396,7 +429,19 @@ async function runSubagent(config: SubagentRunConfig): Promise<void> {
 			mcpEnv.MCP_DIRECT_TOOLS = "__none__";
 		}
 
-		const result = await runPiStreaming(args, step.cwd ?? cwd, outputFile, mcpEnv);
+		// Use Gemini CLI for reviewer agent, otherwise use Pi CLI
+		let result;
+		if (step.agent === 'reviewer') {
+			// For Gemini CLI: use -p flag with just the task
+			const geminiArgs = ["-p", task];
+			const spawnSpec = getGeminiSpawnCommand(geminiArgs);
+			result = await runPiStreamingWithSpawn(spawnSpec, step.cwd ?? cwd, outputFile, mcpEnv);
+		} else {
+			// For Pi CLI: build full args with model, tools, etc.
+			args.push(`Task: ${task}`);
+			const spawnSpec = getPiSpawnCommand(args);
+			result = await runPiStreamingWithSpawn(spawnSpec, step.cwd ?? cwd, outputFile, mcpEnv);
+		}
 
 		if (tmpDir) {
 			try {
